@@ -26,7 +26,8 @@ def inicializador_do_banco():
             "CREATE TABLE IF NOT EXISTS sala ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
             "nome TEXT NOT NULL UNIQUE,"
-            "capacidade INTEGER NOT NULL)"
+            "capacidade INTEGER NOT NULL,"
+            "curso TEXT NOT NULL DEFAULT '' )"
         )
 
         # Tabela aluno_sala (Associação N:M entre Aluno e Sala)
@@ -55,9 +56,17 @@ def inicializador_do_banco():
             "FOREIGN KEY (sala_id) REFERENCES sala(id) ON DELETE CASCADE)"
         )
         
+    # Commit das criações iniciais
         conexao.commit()
 
-# --- Funções CRUD para Aluno ---
+        # Garantir compatibilidade com bancos existentes: adicionar coluna 'curso' se faltar
+        cursor.execute("PRAGMA table_info(sala)")
+        cols = [row[1] for row in cursor.fetchall()]
+        if 'curso' not in cols:
+            cursor.execute("ALTER TABLE sala ADD COLUMN curso TEXT NOT NULL DEFAULT ''")
+            conexao.commit()
+
+    # --- Funções CRUD para Aluno ---
 
 def adicionar_aluno(nome, matricula, email, curso):
     """Adiciona um novo aluno ao banco de dados."""
@@ -113,15 +122,15 @@ def deletar_aluno(aluno_id):
 
 # --- Funções CRUD para Sala ---
 
-def adicionar_sala(nome, capacidade):
+def adicionar_sala(nome, capacidade, curso=''):
     """Adiciona uma nova sala ao banco de dados."""
     try:
         with conectar() as conexao:
             cursor = conexao.cursor()
             cursor.execute('''
-                INSERT INTO sala (nome, capacidade)
-                VALUES (?, ?)
-            ''', (nome, capacidade))
+                INSERT INTO sala (nome, capacidade, curso)
+                VALUES (?, ?, ?)
+            ''', (nome, capacidade, curso))
             conexao.commit()
             return True
     except sqlite3.IntegrityError:
@@ -132,25 +141,25 @@ def buscar_salas():
     """Retorna todas as salas cadastradas."""
     with conectar() as conexao:
         cursor = conexao.cursor()
-        cursor.execute("SELECT id, nome, capacidade FROM sala ORDER BY nome")
+        cursor.execute("SELECT id, nome, capacidade, curso FROM sala ORDER BY nome")
         return cursor.fetchall()
 
 def buscar_sala_por_id(sala_id):
     """Retorna uma sala pelo ID."""
     with conectar() as conexao:
         cursor = conexao.cursor()
-        cursor.execute("SELECT id, nome, capacidade FROM sala WHERE id = ?", (sala_id,))
+        cursor.execute("SELECT id, nome, capacidade, curso FROM sala WHERE id = ?", (sala_id,))
         return cursor.fetchone()
 
-def atualizar_sala(sala_id, nome, capacidade):
+def atualizar_sala(sala_id, nome, capacidade, curso=''):
     """Atualiza os dados de uma sala."""
     try:
         with conectar() as conexao:
             cursor = conexao.cursor()
             cursor.execute('''
-                UPDATE sala SET nome = ?, capacidade = ?
+                UPDATE sala SET nome = ?, capacidade = ?, curso = ?
                 WHERE id = ?
-            ''', (nome, capacidade, sala_id))
+            ''', (nome, capacidade, curso, sala_id))
             conexao.commit()
             return cursor.rowcount > 0
     except sqlite3.IntegrityError:
@@ -210,13 +219,20 @@ def buscar_salas_por_aluno(aluno_id):
     with conectar() as conexao:
         cursor = conexao.cursor()
         cursor.execute('''
-            SELECT s.id, s.nome, s.capacidade
+            SELECT s.id, s.nome, s.capacidade, s.curso
             FROM sala s
             JOIN aluno_sala als ON s.id = als.sala_id
             WHERE als.aluno_id = ?
             ORDER BY s.nome
         ''', (aluno_id,))
         return cursor.fetchall()
+
+def buscar_cursos():
+    """Retorna a lista de cursos distintos cadastrados (provenientes da tabela aluno)."""
+    with conectar() as conexao:
+        cursor = conexao.cursor()
+        cursor.execute("SELECT DISTINCT curso FROM aluno WHERE curso IS NOT NULL AND curso != '' ORDER BY curso")
+        return [row[0] for row in cursor.fetchall()]
 
 # --- Funções CRUD para Notas ---
 
