@@ -3,17 +3,11 @@ from dotenv import load_dotenv
 import os
 from openai import OpenAI
 
-# API KEY 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
-
-
-# === Carregar variáveis do arquivo .env ===
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
-# === Inicializar Flask ===
-app = Flask('chatbot_academico') # Alterado o nome para evitar conflitos de nome de módulo
+app = Flask('chatbot_academico')
 
-# === Inicializar cliente da OpenAI ===
 if api_key:
     client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
@@ -27,7 +21,6 @@ else:
 print("Iniciando Chatbot Acadêmico Colaborativo...")
 print(f"OpenAI habilitado: {openai_enabled}")
 
-# === Página HTML ===
 HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -79,12 +72,10 @@ HTML_PAGE = """
 </html>
 """
 
-# === Rota principal ===
 @app.route("/")
 def home():
     return render_template_string(HTML_PAGE)
 
-# === Rota de conversa ===
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.json.get("message")
@@ -93,9 +84,8 @@ def chat():
         return jsonify({"reply": "A chave da OpenAI não está configurada. Configure o arquivo .env primeiro."})
 
     try:
-        # === Enviar a pergunta ao modelo com contexto temático ===
         response = client.chat.completions.create(
-            model="deepseek/deepseek-r1:free",  # modelo rápido e econômico
+            model="deepseek/deepseek-r1:free",
             messages=[
                 {
                     "role": "system",
@@ -118,6 +108,3 @@ def chat():
 
     except Exception as e:
         return jsonify({"reply": f"Ocorreu um erro: {e}"})
-
-# === Iniciar o servidor ===
-# Removido o bloco if __name__ == "__main__": para que o Flask app possa ser importado e rodado em uma thread

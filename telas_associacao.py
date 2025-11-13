@@ -7,7 +7,6 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 import banco
 
-# Variáveis globais
 aluno_selecionado_var = None
 sala_selecionada_var = None
 
@@ -16,18 +15,15 @@ def abrir_tela_associacao_aluno_sala(content_frame):
     """Abre a tela para associar alunos a salas."""
     global aluno_selecionado_var, sala_selecionada_var
     
-    # Limpa o frame de conteúdo
     for widget in content_frame.winfo_children():
         widget.destroy()
 
     tk.Label(content_frame, text="Associar Aluno a Sala", font=("Arial", 18, "bold"), fg="white",
              bg="#20232a").pack(pady=10)
 
-    # Frame para seleção
     select_frame = tk.Frame(content_frame, bg="#20232a")
     select_frame.pack(pady=10)
 
-    # Seleção de Aluno
     tk.Label(select_frame, text="Aluno:", bg="#20232a", fg="white").grid(row=0, column=0, padx=5, pady=5, sticky="w")
     alunos = banco.buscar_alunos()
     alunos_dict = {aluno[0]: f"{aluno[1]} ({aluno[2]})" for aluno in alunos}
@@ -41,7 +37,6 @@ def abrir_tela_associacao_aluno_sala(content_frame):
     aluno_menu = ttk.Combobox(select_frame, textvariable=aluno_selecionado_var, values=alunos_nomes, state="readonly", width=40)
     aluno_menu.grid(row=0, column=1, padx=5, pady=5)
 
-    # Seleção de Sala
     tk.Label(select_frame, text="Sala:", bg="#20232a", fg="white").grid(row=1, column=0, padx=5, pady=5, sticky="w")
     salas = banco.buscar_salas()
     salas_dict = {sala[0]: f"{sala[1]} (Cap: {sala[2]})" for sala in salas}
@@ -79,6 +74,14 @@ def abrir_tela_associacao_aluno_sala(content_frame):
             messagebox.showwarning("Aviso", "Selecione um aluno e uma sala.")
             return
 
+        aluno = banco.buscar_aluno_por_id(aluno_id)
+        sala = banco.buscar_sala_por_id(sala_id)
+        curso_aluno = aluno[4] if aluno and len(aluno) > 4 else ''
+        curso_sala = sala[3] if sala and len(sala) > 3 else ''
+        if curso_aluno and curso_sala and curso_aluno != curso_sala:
+            messagebox.showerror("Erro", f"Aluno do curso '{curso_aluno}' não pode ser associado à sala do curso '{curso_sala}'.")
+            return
+
         if banco.associar_aluno_sala(aluno_id, sala_id):
             messagebox.showinfo("Sucesso", "Aluno associado à sala com sucesso!")
         else:
@@ -95,7 +98,6 @@ def abrir_tela_associacao_aluno_sala(content_frame):
         else:
             messagebox.showerror("Erro", "Aluno não está associado a esta sala.")
 
-    # Botões de Ação
     action_frame = tk.Frame(content_frame, bg="#20232a")
     action_frame.pack(pady=10)
 

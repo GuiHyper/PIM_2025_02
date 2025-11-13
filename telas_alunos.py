@@ -9,7 +9,6 @@ import random
 import string
 import banco
 
-# Variáveis globais para os widgets de alunos
 aluno_id_selecionado = None
 entry_nome_aluno = None
 entry_email_aluno = None
@@ -30,18 +29,15 @@ def abrir_tela_alunos(content_frame):
     """Exibe a interface de gerenciamento de alunos."""
     global aluno_id_selecionado, entry_nome_aluno, entry_email_aluno, selected_curso, curso_var, label_matricula_aluno, tree_alunos
     
-    # Limpa o frame de conteúdo
     for widget in content_frame.winfo_children():
         widget.destroy()
     
     tk.Label(content_frame, text="Gerenciamento de Alunos", font=("Arial", 18, "bold"), fg="white",
              bg="#20232a").pack(pady=10)
 
-    # Frame para o formulário de cadastro/edição
     form_frame = tk.Frame(content_frame, bg="#20232a")
     form_frame.pack(pady=10)
 
-    # Variáveis de controle
     aluno_id_selecionado = tk.StringVar()
     
     tk.Label(form_frame, text="Nome:", bg="#20232a", fg="white").grid(row=0, column=0, padx=5, pady=5, sticky="w")
@@ -56,26 +52,24 @@ def abrir_tela_alunos(content_frame):
     curso_var = tk.StringVar()
     selected_curso = ttk.Combobox(form_frame, width=27, textvariable=curso_var, state="readonly")
     selected_curso["values"] = (
-                                "",
-                                "Direito",
+                                ""
                                 "Administração",
-                                "Medicina",
-                                "Enfermagem",
-                                "Psicologia",   
-                                "Engenharia Civil",
-                                "Pedagogia",
                                 "Analise e Desenvolvimento de Sistemas",
                                 "Arquitetura e Urbanismo",
-                                "Nutrição")
+                                "Direito",
+                                "Engenharia Civil",
+                                "Enfermagem",
+                                "Medicina",
+                                "Nutrição",
+                                "Pedagogia",
+                                "Psicologia")
     selected_curso.grid(row=3, column=1, padx=5, pady=5)
     selected_curso.current(0)
 
-    # Exibe matrícula (apenas leitura) abaixo do campo Curso
     tk.Label(form_frame, text="Matrícula:", bg="#20232a", fg="white").grid(row=4, column=0, padx=5, pady=5, sticky="w")
     label_matricula_aluno = tk.Label(form_frame, text="(Gerada automaticamente)", bg="#20232a", fg="#61dafb")
     label_matricula_aluno.grid(row=4, column=1, padx=5, pady=5, sticky="w")
 
-    # Botões de Ação
     action_frame = tk.Frame(content_frame, bg="#20232a")
     action_frame.pack(pady=10)
 
@@ -89,7 +83,6 @@ def abrir_tela_alunos(content_frame):
               bg="#61dafb", fg="black",
               font=("Arial", 10, "bold")).pack(side=tk.LEFT, padx=5)
 
-    # Treeview para exibir a lista de alunos
     tree_alunos = ttk.Treeview(content_frame, columns=("ID", "Nome", "Matrícula", "Email", "Curso"), show="headings")
     tree_alunos.heading("ID", text="ID")
     tree_alunos.heading("Nome", text="Nome")
@@ -154,14 +147,12 @@ def adicionar_ou_atualizar_aluno():
 
     aluno_id = aluno_id_selecionado.get()
     if aluno_id:
-        # Atualizar - para atualizar usamos a matrícula existente
         matricula = label_matricula_aluno.cget("text")
         if banco.atualizar_aluno(aluno_id, nome, matricula, email, curso):
             messagebox.showinfo("Sucesso", "Aluno atualizado com sucesso!")
         else:
             messagebox.showerror("Erro", "Email já cadastrado.")
     else:
-        # Adicionar - gerar nova matrícula
         matricula = gerar_matricula()
         if banco.adicionar_aluno(nome, matricula, email, curso):
             messagebox.showinfo("Sucesso", f"Aluno adicionado com sucesso!\nMatrícula: {matricula}")

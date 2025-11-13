@@ -11,7 +11,6 @@ def inicializador_do_banco():
     with conectar() as conexao:
         cursor = conexao.cursor()
 
-        # Tabela aluno
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS aluno ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -21,7 +20,6 @@ def inicializador_do_banco():
             "curso TEXT NOT NULL)"
         )
 
-        # Tabela sala
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS sala ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -30,7 +28,6 @@ def inicializador_do_banco():
             "curso TEXT NOT NULL DEFAULT '' )"
         )
 
-        # Tabela aluno_sala (Associação N:M entre Aluno e Sala)
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS aluno_sala ("
             "aluno_id INTEGER NOT NULL,"
@@ -40,7 +37,6 @@ def inicializador_do_banco():
             "FOREIGN KEY (sala_id) REFERENCES sala(id) ON DELETE CASCADE)"
         )
 
-        # Tabela nota
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS nota ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -56,17 +52,13 @@ def inicializador_do_banco():
             "FOREIGN KEY (sala_id) REFERENCES sala(id) ON DELETE CASCADE)"
         )
         
-    # Commit das criações iniciais
         conexao.commit()
 
-        # Garantir compatibilidade com bancos existentes: adicionar coluna 'curso' se faltar
         cursor.execute("PRAGMA table_info(sala)")
         cols = [row[1] for row in cursor.fetchall()]
         if 'curso' not in cols:
             cursor.execute("ALTER TABLE sala ADD COLUMN curso TEXT NOT NULL DEFAULT ''")
             conexao.commit()
-
-    # --- Funções CRUD para Aluno ---
 
 def adicionar_aluno(nome, matricula, email, curso):
     """Adiciona um novo aluno ao banco de dados."""
@@ -80,7 +72,6 @@ def adicionar_aluno(nome, matricula, email, curso):
             conexao.commit()
             return True
     except sqlite3.IntegrityError:
-        # Matrícula ou email já existem
         return False
 
 def buscar_alunos():
@@ -109,7 +100,6 @@ def atualizar_aluno(aluno_id, nome, matricula, email, curso):
             conexao.commit()
             return cursor.rowcount > 0
     except sqlite3.IntegrityError:
-        # Matrícula ou email já existem
         return False
 
 def deletar_aluno(aluno_id):
@@ -119,8 +109,6 @@ def deletar_aluno(aluno_id):
         cursor.execute("DELETE FROM aluno WHERE id = ?", (aluno_id,))
         conexao.commit()
         return cursor.rowcount > 0
-
-# --- Funções CRUD para Sala ---
 
 def adicionar_sala(nome, capacidade, curso=''):
     """Adiciona uma nova sala ao banco de dados."""
@@ -134,7 +122,6 @@ def adicionar_sala(nome, capacidade, curso=''):
             conexao.commit()
             return True
     except sqlite3.IntegrityError:
-        # Nome da sala já existe
         return False
 
 def buscar_salas():
@@ -163,7 +150,6 @@ def atualizar_sala(sala_id, nome, capacidade, curso=''):
             conexao.commit()
             return cursor.rowcount > 0
     except sqlite3.IntegrityError:
-        # Nome da sala já existe
         return False
 
 def deletar_sala(sala_id):
@@ -174,11 +160,17 @@ def deletar_sala(sala_id):
         conexao.commit()
         return cursor.rowcount > 0
 
-# --- Funções para Associação Aluno-Sala ---
 
 def associar_aluno_sala(aluno_id, sala_id):
     """Associa um aluno a uma sala."""
     try:
+        aluno = buscar_aluno_por_id(aluno_id)
+        sala = buscar_sala_por_id(sala_id)
+        if aluno and sala:
+            curso_aluno = aluno[4] if len(aluno) > 4 else ''
+            curso_sala = sala[3] if len(sala) > 3 else ''
+            if curso_aluno and curso_sala and curso_aluno != curso_sala:
+                return False
         with conectar() as conexao:
             cursor = conexao.cursor()
             cursor.execute('''
@@ -188,7 +180,6 @@ def associar_aluno_sala(aluno_id, sala_id):
             conexao.commit()
             return True
     except sqlite3.IntegrityError:
-        # Aluno já associado a esta sala
         return False
 
 def desassociar_aluno_sala(aluno_id, sala_id):
@@ -234,11 +225,9 @@ def buscar_cursos():
         cursor.execute("SELECT DISTINCT curso FROM aluno WHERE curso IS NOT NULL AND curso != '' ORDER BY curso")
         return [row[0] for row in cursor.fetchall()]
 
-# --- Funções CRUD para Notas ---
 
 def calcular_media(np1, np2, trabalho):
     """Calcula a média ponderada: NP1(peso 4) + NP2(peso 4) + Trabalho(peso 2)."""
-    # A soma dos pesos é 4 + 4 + 2 = 10
     if np1 is None or np2 is None or trabalho is None:
         return 0.0
     
@@ -252,14 +241,12 @@ def atribuir_notas(aluno_id, sala_id, np1, np2, trabalho):
     try:
         with conectar() as conexao:
             cursor = conexao.cursor()
-            # Tenta atualizar
             cursor.execute('''
                 UPDATE nota SET np1 = ?, np2 = ?, trabalho = ?, media = ?, data_atribuicao = CURRENT_TIMESTAMP
                 WHERE aluno_id = ? AND sala_id = ?
             ''', (np1, np2, trabalho, media, aluno_id, sala_id))
             
             if cursor.rowcount == 0:
-                # Se não atualizou, insere
                 cursor.execute('''
                     INSERT INTO nota (aluno_id, sala_id, np1, np2, trabalho, media)
                     VALUES (?, ?, ?, ?, ?, ?)
@@ -279,7 +266,6 @@ def buscar_notas_aluno_sala(aluno_id, sala_id):
             SELECT np1, np2, trabalho, media FROM nota WHERE aluno_id = ? AND sala_id = ?
         ''', (aluno_id, sala_id))
         resultado = cursor.fetchone()
-        # Retorna (np1, np2, trabalho, media) ou (0.0, 0.0, 0.0, 0.0) se não houver registro
         return resultado if resultado else (0.0, 0.0, 0.0, 0.0)
 
 def buscar_notas_por_sala(sala_id):

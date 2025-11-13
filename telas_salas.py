@@ -48,7 +48,6 @@ def on_sala_selecionada(event):
         limpar_campos_sala()
         entry_nome_sala.insert(0, values[1])
         entry_capacidade_sala.insert(0, values[2])
-        # Se houver coluna de curso, o índice 3 existe
         if len(values) > 3:
             sala_curso_var.set(values[3])
         else:
@@ -79,11 +78,9 @@ def abrir_tela_salas(content_frame):
     entry_capacidade_sala = tk.Entry(form_frame, width=30)
     entry_capacidade_sala.grid(row=1, column=1, padx=5, pady=5)
 
-    # Combobox de Cursos (para vincular sala a um curso)
     tk.Label(form_frame, text="Curso:", bg="#20232a", fg="white").grid(row=2, column=0, padx=5, pady=5, sticky="w")
     sala_curso_var = tk.StringVar()
     combobox_curso = ttk.Combobox(form_frame, textvariable=sala_curso_var, width=27, state='readonly')
-    # Popular com cursos existentes na tabela aluno
     cursos = banco.buscar_cursos()
     combobox_curso['values'] = cursos
     combobox_curso.grid(row=2, column=1, padx=5, pady=5)

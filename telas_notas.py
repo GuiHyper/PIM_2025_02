@@ -7,7 +7,6 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 import banco
 
-# Variáveis globais
 sala_nota_selecionada_var = None
 entry_np1 = None
 entry_np2 = None
