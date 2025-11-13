@@ -26,8 +26,7 @@ def inicializador_do_banco():
             "CREATE TABLE IF NOT EXISTS sala ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
             "nome TEXT NOT NULL UNIQUE,"
-            "capacidade INTEGER NOT NULL,"
-            "descricao TEXT)"
+            "capacidade INTEGER NOT NULL)"
         )
 
         # Tabela aluno_sala (Associação N:M entre Aluno e Sala)
@@ -114,15 +113,15 @@ def deletar_aluno(aluno_id):
 
 # --- Funções CRUD para Sala ---
 
-def adicionar_sala(nome, capacidade, descricao):
+def adicionar_sala(nome, capacidade):
     """Adiciona uma nova sala ao banco de dados."""
     try:
         with conectar() as conexao:
             cursor = conexao.cursor()
             cursor.execute('''
-                INSERT INTO sala (nome, capacidade, descricao)
-                VALUES (?, ?, ?)
-            ''', (nome, capacidade, descricao))
+                INSERT INTO sala (nome, capacidade)
+                VALUES (?, ?)
+            ''', (nome, capacidade))
             conexao.commit()
             return True
     except sqlite3.IntegrityError:
@@ -133,25 +132,25 @@ def buscar_salas():
     """Retorna todas as salas cadastradas."""
     with conectar() as conexao:
         cursor = conexao.cursor()
-        cursor.execute("SELECT id, nome, capacidade, descricao FROM sala ORDER BY nome")
+        cursor.execute("SELECT id, nome, capacidade FROM sala ORDER BY nome")
         return cursor.fetchall()
 
 def buscar_sala_por_id(sala_id):
     """Retorna uma sala pelo ID."""
     with conectar() as conexao:
         cursor = conexao.cursor()
-        cursor.execute("SELECT id, nome, capacidade, descricao FROM sala WHERE id = ?", (sala_id,))
+        cursor.execute("SELECT id, nome, capacidade FROM sala WHERE id = ?", (sala_id,))
         return cursor.fetchone()
 
-def atualizar_sala(sala_id, nome, capacidade, descricao):
+def atualizar_sala(sala_id, nome, capacidade):
     """Atualiza os dados de uma sala."""
     try:
         with conectar() as conexao:
             cursor = conexao.cursor()
             cursor.execute('''
-                UPDATE sala SET nome = ?, capacidade = ?, descricao = ?
+                UPDATE sala SET nome = ?, capacidade = ?
                 WHERE id = ?
-            ''', (nome, capacidade, descricao, sala_id))
+            ''', (nome, capacidade, sala_id))
             conexao.commit()
             return cursor.rowcount > 0
     except sqlite3.IntegrityError:
@@ -211,7 +210,7 @@ def buscar_salas_por_aluno(aluno_id):
     with conectar() as conexao:
         cursor = conexao.cursor()
         cursor.execute('''
-            SELECT s.id, s.nome, s.capacidade, s.descricao
+            SELECT s.id, s.nome, s.capacidade
             FROM sala s
             JOIN aluno_sala als ON s.id = als.sala_id
             WHERE als.aluno_id = ?
