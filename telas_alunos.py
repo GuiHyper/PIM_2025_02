@@ -5,6 +5,7 @@ Responsável pela interface de cadastro, edição e exclusão de alunos
 
 import tkinter as tk
 from tkinter import messagebox, ttk
+from notifications import toast_success, toast_error, toast_warning
 import random
 import string
 import banco
@@ -142,23 +143,23 @@ def adicionar_ou_atualizar_aluno():
     curso = curso_var.get()
 
     if not nome or not email or not curso:
-        messagebox.showwarning("Aviso", "Todos os campos são obrigatórios.")
+        toast_warning(None, "Todos os campos são obrigatórios.")
         return
 
     aluno_id = aluno_id_selecionado.get()
     if aluno_id:
         matricula = label_matricula_aluno.cget("text")
         if banco.atualizar_aluno(aluno_id, nome, matricula, email, curso):
-            messagebox.showinfo("Sucesso", "Aluno atualizado com sucesso!")
+            toast_success(None, "Aluno atualizado com sucesso!")
         else:
-            messagebox.showerror("Erro", "Email já cadastrado.")
+            toast_error(None, "Email já cadastrado.")
     else:
         matricula = gerar_matricula()
         if banco.adicionar_aluno(nome, matricula, email, curso):
-            messagebox.showinfo("Sucesso", f"Aluno adicionado com sucesso!\nMatrícula: {matricula}")
+            toast_success(None, f"Aluno adicionado com sucesso!\nMatrícula: {matricula}")
             label_matricula_aluno.config(text=matricula)
         else:
-            messagebox.showerror("Erro", "Email já cadastrado ou matrícula duplicada.")
+            toast_error(None, "Email já cadastrado ou matrícula duplicada.")
 
     limpar_campos_aluno()
     carregar_alunos_na_treeview()
@@ -168,15 +169,15 @@ def deletar_aluno_selecionado():
     """Deleta o aluno selecionado."""
     selected_item = tree_alunos.focus()
     if not selected_item:
-        messagebox.showwarning("Aviso", "Selecione um aluno para excluir.")
+        toast_warning(None, "Selecione um aluno para excluir.")
         return
 
     aluno_id = tree_alunos.item(selected_item, 'values')[0]
     
     if messagebox.askyesno("Confirmação", f"Tem certeza que deseja excluir o aluno ID {aluno_id}?"):
         if banco.deletar_aluno(aluno_id):
-            messagebox.showinfo("Sucesso", "Aluno excluído com sucesso.")
+            toast_success(None, "Aluno excluído com sucesso.")
             limpar_campos_aluno()
             carregar_alunos_na_treeview()
         else:
-            messagebox.showerror("Erro", "Não foi possível excluir o aluno.")
+            toast_error(None, "Não foi possível excluir o aluno.")

@@ -5,7 +5,6 @@ import webbrowser
 import time
 import os
 import banco
-from chatbot import app as chatbot_app
 
 import telas_alunos
 import telas_salas
@@ -20,29 +19,6 @@ flask_thread = None
 
 content_frame = None
 root = None
-
-
-def start_flask_server():
-    """Inicia o servidor Flask em uma thread separada."""
-    global flask_thread
-    try:
-        chatbot_app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
-    except Exception as e:
-        print(f"Erro ao iniciar o servidor Flask: {e}")
-
-def abrir_chatbot():
-    """Inicia o servidor Flask (se não estiver rodando) e abre o chatbot no navegador."""
-    global flask_thread
-    if flask_thread is None or not (flask_thread.is_alive() if flask_thread else False):
-        flask_thread = threading.Thread(target=start_flask_server)
-        flask_thread.daemon = True
-        flask_thread.start()
-        
-        time.sleep(1) 
-        
-        webbrowser.open("http://127.0.0.1:5000")
-    else:
-        webbrowser.open("http://127.0.0.1:5000")
 
 def on_closing(root):
     """Manipulador de fechamento para a janela principal."""
@@ -73,9 +49,6 @@ def iniciar_tela_principal():
     
     tk.Button(frame_botoes, text="Gerenciar Salas", command=lambda: telas_salas.abrir_tela_salas(content_frame), 
               bg="#e5c07b", fg="black",
-              font=("Arial", 12, "bold"), width=20).pack(side=tk.LEFT, padx=10)
-    
-    tk.Button(frame_botoes, text="Chatbot Acadêmico", command=abrir_chatbot, bg="#c678dd", fg="black",
               font=("Arial", 12, "bold"), width=20).pack(side=tk.LEFT, padx=10)
 
     content_frame = tk.Frame(root, bg="#20232a")

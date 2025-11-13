@@ -7,6 +7,7 @@ bem como visualização de alunos matriculados em cada sala com seus status de a
 import tkinter as tk
 from tkinter import messagebox, ttk
 import banco
+from notifications import toast_success, toast_error, toast_warning
 
 sala_id_selecionada = None
 entry_nome_sala = None
@@ -174,26 +175,26 @@ def adicionar_ou_atualizar_sala():
     curso = sala_curso_var.get() if sala_curso_var else ""
 
     if not nome or not capacidade_str:
-        messagebox.showwarning("Aviso", "Nome e Capacidade são obrigatórios.")
+        toast_warning(None, "Nome e Capacidade são obrigatórios.")
         return
     
     try:
         capacidade = int(capacidade_str)
     except ValueError:
-        messagebox.showerror("Erro", "Capacidade deve ser um número inteiro.")
+        toast_error(None, "Capacidade deve ser um número inteiro.")
         return
 
     sala_id = sala_id_selecionada.get()
     if sala_id:
         if banco.atualizar_sala(sala_id, nome, capacidade, curso):
-            messagebox.showinfo("Sucesso", "Sala atualizada com sucesso!")
+            toast_success(None, "Sala atualizada com sucesso!")
         else:
-            messagebox.showerror("Erro", "Nome da Sala já cadastrado.")
+            toast_error(None, "Nome da Sala já cadastrado.")
     else:
         if banco.adicionar_sala(nome, capacidade, curso):
-            messagebox.showinfo("Sucesso", "Sala adicionada com sucesso!")
+            toast_success(None, "Sala adicionada com sucesso!")
         else:
-            messagebox.showerror("Erro", "Nome da Sala já cadastrado.")
+            toast_error(None, "Nome da Sala já cadastrado.")
 
     limpar_campos_sala()
     carregar_salas_na_treeview()
@@ -203,14 +204,14 @@ def deletar_sala_selecionada():
     """Deleta a sala selecionada."""
     selected_item = tree_salas.focus()
     if not selected_item:
-        messagebox.showwarning("Aviso", "Selecione uma sala para excluir.")
+        toast_warning(None, "Selecione uma sala para excluir.")
         return
 
     sala_id = tree_salas.item(selected_item, 'values')[0]
     
     if messagebox.askyesno("Confirmação", f"Tem certeza que deseja excluir a sala ID {sala_id}?"):
         if banco.deletar_sala(sala_id):
-            messagebox.showinfo("Sucesso", "Sala excluída com sucesso.")
+            toast_success(None, "Sala excluída com sucesso.")
             try:
                 for item in tree_alunos_sala.get_children():
                     tree_alunos_sala.delete(item)
@@ -220,4 +221,4 @@ def deletar_sala_selecionada():
             limpar_campos_sala()
             carregar_salas_na_treeview()
         else:
-            messagebox.showerror("Erro", "Não foi possível excluir a sala.")
+            toast_error(None, "Não foi possível excluir a sala.")

@@ -5,6 +5,7 @@ Responsável pela interface de atribuição de notas aos alunos em cada sala
 
 import tkinter as tk
 from tkinter import messagebox, ttk
+from notifications import toast_success, toast_error, toast_warning
 import banco
 
 sala_nota_selecionada_var = None
@@ -18,14 +19,12 @@ def abrir_tela_atribuir_notas(content_frame):
     """Abre a tela para atribuir notas aos alunos de uma sala."""
     global sala_nota_selecionada_var, entry_np1, entry_np2, entry_trabalho, tree_notas
     
-    # Limpa o frame de conteúdo
     for widget in content_frame.winfo_children():
         widget.destroy()
 
     tk.Label(content_frame, text="Atribuição de Notas", font=("Arial", 18, "bold"), fg="white",
              bg="#20232a").pack(pady=10)
 
-    # Frame para seleção de Sala
     select_frame = tk.Frame(content_frame, bg="#20232a")
     select_frame.pack(pady=10)
 
@@ -51,7 +50,6 @@ def abrir_tela_atribuir_notas(content_frame):
         if sala_id is None:
             return
 
-        # Limpa a Treeview
         for item in tree_notas.get_children():
             tree_notas.delete(item)
 
@@ -60,10 +58,8 @@ def abrir_tela_atribuir_notas(content_frame):
         for aluno in alunos_na_sala:
             aluno_id = aluno[0]
             nome_aluno = aluno[1]
-            # Busca as notas (NP1, NP2, Trabalho, Média)
             np1, np2, trabalho, media = banco.buscar_notas_aluno_sala(aluno_id, sala_id)
             
-            # Determina o status de aprovação
             if media >= 7:
                 status = "APROVADO"
                 tag = "aprovado"
@@ -71,12 +67,10 @@ def abrir_tela_atribuir_notas(content_frame):
                 status = "REPROVADO"
                 tag = "reprovado"
             
-            # Insere na Treeview com as notas e status
             tree_notas.insert("", tk.END, values=(aluno_id, nome_aluno, np1, np2, trabalho, media, status), tags=(tag,))
 
     sala_menu.bind("<<ComboboxSelected>>", carregar_alunos_e_notas)
 
-    # Treeview para exibir alunos e notas
     tree_notas = ttk.Treeview(content_frame, columns=("ID", "Nome", "NP1", "NP2", "Trabalho", "Média", "Status"), show="headings")
     tree_notas.heading("ID", text="ID")
     tree_notas.heading("Nome", text="Nome do Aluno")
@@ -94,17 +88,14 @@ def abrir_tela_atribuir_notas(content_frame):
     tree_notas.column("Média", width=80, anchor="center")
     tree_notas.column("Status", width=100, anchor="center")
     
-    # Configurar tags de estilo para o status
     tree_notas.tag_configure("aprovado", foreground="#00aa00", background="#20232a")
     tree_notas.tag_configure("reprovado", foreground="#ff6b6b", background="#20232a")
     
     tree_notas.pack(fill=tk.BOTH, expand=True, pady=10)
 
-    # Frame para atribuição de notas
     atribuir_frame = tk.Frame(content_frame, bg="#20232a")
     atribuir_frame.pack(pady=10)
 
-    # Campos de entrada para as notas
     tk.Label(atribuir_frame, text="NP1:", bg="#20232a", fg="white").grid(row=0, column=0, padx=5, pady=5, sticky="w")
     entry_np1 = tk.Entry(atribuir_frame, width=5)
     entry_np1.grid(row=0, column=1, padx=5, pady=5)
@@ -120,7 +111,7 @@ def abrir_tela_atribuir_notas(content_frame):
     def atribuir_notas_selecionadas():
         selected_item = tree_notas.focus()
         if not selected_item:
-            messagebox.showwarning("Aviso", "Selecione um aluno na lista.")
+            toast_warning(None, "Selecione um aluno na lista.")
             return
 
         aluno_id = tree_notas.item(selected_item, 'values')[0]
@@ -130,7 +121,7 @@ def abrir_tela_atribuir_notas(content_frame):
         trabalho_str = entry_trabalho.get()
         
         if not np1_str or not np2_str or not trabalho_str:
-            messagebox.showwarning("Aviso", "Preencha todas as notas (NP1, NP2, Trabalho).")
+            toast_warning(None, "Preencha todas as notas (NP1, NP2, Trabalho).")
             return
 
         try:
@@ -141,7 +132,7 @@ def abrir_tela_atribuir_notas(content_frame):
             if not (0.0 <= np1 <= 10.0 and 0.0 <= np2 <= 10.0 and 0.0 <= trabalho <= 10.0):
                 raise ValueError
         except ValueError:
-            messagebox.showerror("Erro", "Notas inválidas. Digite números entre 0.0 e 10.0.")
+            toast_error(None, "Notas inválidas. Digite números entre 0.0 e 10.0.")
             return
 
         sala_nome_selecionada = sala_nota_selecionada_var.get()
@@ -152,21 +143,21 @@ def abrir_tela_atribuir_notas(content_frame):
                 break
         
         if sala_id is None:
-            messagebox.showerror("Erro", "Sala não selecionada.")
+            toast_error(None, "Sala não selecionada.")
             return
 
         if banco.atribuir_notas(aluno_id, sala_id, np1, np2, trabalho):
             media = banco.calcular_media(np1, np2, trabalho)
             if media >= 7:
-                messagebox.showinfo("Sucesso", f"Notas atribuídas. Média calculada: {media}\n✓ ALUNO APROVADO!")
+                toast_success(None, f"Notas atribuídas. Média calculada: {media}\n✓ ALUNO APROVADO!")
             else:
-                messagebox.showinfo("Sucesso", f"Notas atribuídas. Média calculada: {media}\n✗ Aluno reprovado.")
+                toast_success(None, f"Notas atribuídas. Média calculada: {media}\n✗ Aluno reprovado.")
             entry_np1.delete(0, tk.END)
             entry_np2.delete(0, tk.END)
             entry_trabalho.delete(0, tk.END)
-            carregar_alunos_e_notas() # Recarrega a lista para mostrar as notas e média atualizadas
+            carregar_alunos_e_notas() 
         else:
-            messagebox.showerror("Erro", "Não foi possível atribuir as notas.")
+            toast_error(None, "Não foi possível atribuir as notas.")
 
     tk.Button(atribuir_frame, text="Atribuir Notas", command=atribuir_notas_selecionadas, bg="#98c379", fg="black",
               font=("Arial", 10, "bold")).grid(row=0, column=6, padx=10, pady=5)
