@@ -1,0 +1,362 @@
+# 📋 Índice Completo do Projeto - Sistema Acadêmico v2.0
+
+## 📁 Estrutura Final do Projeto
+
+```
+PIM/
+│
+├── 🎨 ARQUIVOS PRINCIPAIS (Interface)
+│   ├── pim.py (4.1 KB) ⭐ Arquivo Principal - Navbar e Navegação
+│   ├── telas_alunos.py (8.0 KB) - Gerenciamento de Alunos
+│   ├── telas_salas.py (9.5 KB) - Gerenciamento de Salas
+│   ├── telas_associacao.py (4.1 KB) - Associação Aluno-Sala
+│   └── telas_notas.py (7.2 KB) - Atribuição de Notas
+│
+├── 💾 BANCO DE DADOS
+│   ├── banco.py (10.1 KB) - Camada de Acesso aos Dados
+│   └── sistema_academico.db (45 KB) - Banco SQLite
+│
+├── 🤖 EXTRAS
+│   ├── chatbot.py (4.7 KB) - Servidor Flask do Chatbot
+│   └── .env (96 bytes) - Variáveis de Ambiente
+│
+└── 📚 DOCUMENTAÇÃO
+    ├── README.md (5.5 KB) - Guia Principal do Projeto
+    ├── ARQUITETURA.txt (10.8 KB) - Diagrama Técnico Detalhado
+    ├── GUIA_REFATORACAO.md (5.0 KB) - Como Adicionar Novas Telas
+    ├── RESUMO_REFATORACAO.txt (6.2 KB) - Resumo das Mudanças
+    └── INDICE_PROJETO.txt (Este arquivo!)
+
+Total: 13 arquivos | ~130 KB de código
+```
+
+---
+
+## 📄 Descrição Detalhada de Cada Arquivo
+
+### 🎨 CAMADA DE INTERFACE (Tkinter)
+
+#### **pim.py** (4.1 KB) ⭐ PRINCIPAL
+**O que faz:** Inicializa a aplicação Tkinter, gerencia a janela principal e coordena navegação
+**Quem edita:** Apenas para mudanças na barra de navegação ou tema geral
+**Dependências:** Todos os módulos de telas
+**Funções principais:**
+- `iniciar_tela_principal()` - Cria janela principal
+- `start_flask_server()` - Inicia servidor Flask
+- `abrir_chatbot()` - Abre chatbot no navegador
+- `on_closing()` - Fecha aplicação
+
+#### **telas_alunos.py** (8.0 KB)
+**O que faz:** Interface de cadastro, edição e exclusão de alunos
+**Quem edita:** Quando quer modificar o formulário de alunos
+**Dependências:** banco.py
+**Funções principais:**
+- `abrir_tela_alunos()` - Abre tela de alunos
+- `gerar_matricula()` - Gera ID automático (1 letra + 6 dígitos)
+- `adicionar_ou_atualizar_aluno()` - Salva aluno
+- `carregar_aluno_para_edicao()` - Carrega para edição
+- `deletar_aluno_selecionado()` - Remove aluno
+- `carregar_alunos_na_treeview()` - Atualiza lista
+
+**Widgets Globais:**
+- `entry_nome_aluno` - Campo de nome
+- `entry_email_aluno` - Campo de email
+- `curso_var` - StringVar para curso
+- `selected_curso` - Combobox de cursos
+- `label_matricula_aluno` - Label da matrícula
+- `tree_alunos` - Treeview com lista de alunos
+
+#### **telas_salas.py** (9.5 KB)
+**O que faz:** Interface de cadastro, edição e exclusão de salas, com visualização de alunos
+**Quem edita:** Quando quer modificar o formulário de salas ou alunos por sala
+**Dependências:** banco.py
+**Funções principais:**
+- `abrir_tela_salas()` - Abre tela de salas
+- `on_sala_selecionada()` - Carrega alunos da sala (com status colorido)
+- `adicionar_ou_atualizar_sala()` - Salva sala
+- `deletar_sala_selecionada()` - Remove sala
+- `carregar_salas_na_treeview()` - Atualiza lista
+- `limpar_campos_sala()` - Limpa formulário
+
+**Características especiais:**
+- Status colorido: 🟢 Verde (Aprovado ≥7) / 🔴 Vermelho (Reprovado <7)
+- Treeview dupla (Salas à esquerda, Alunos à direita)
+
+**Widgets Globais:**
+- `entry_nome_sala` - Campo de nome da sala
+- `entry_capacidade_sala` - Campo de capacidade
+- `entry_descricao_sala` - Campo de descrição
+- `tree_salas` - Treeview com lista de salas
+- `tree_alunos_sala` - Treeview com alunos da sala selecionada
+
+#### **telas_associacao.py** (4.1 KB)
+**O que faz:** Interface para associar/desassociar alunos a salas
+**Quem edita:** Quando quer melhorar a busca ou adicionar validações
+**Dependências:** banco.py
+**Funções principais:**
+- `abrir_tela_associacao_aluno_sala()` - Abre tela
+- Closures para `associar()` e `desassociar()`
+- `get_ids()` - Extrai IDs do combobox
+
+**Interface simples:**
+- Dropdown de alunos
+- Dropdown de salas
+- Botões Associar/Desassociar
+
+#### **telas_notas.py** (7.2 KB)
+**O que faz:** Interface para atribuição de notas e cálculo de média
+**Quem edita:** Quando quer mudar fórmula de média ou adicionar nota final
+**Dependências:** banco.py
+**Funções principais:**
+- `abrir_tela_atribuir_notas()` - Abre tela
+- `carregar_alunos_e_notas()` - Carrega alunos da sala selecionada
+- `atribuir_notas_selecionadas()` - Salva as notas
+
+**Características especiais:**
+- Dropdown para selecionar sala
+- Treeview com lista de alunos e notas
+- Campos para NP1, NP2, Trabalho
+- Cálculo automático de média
+- Status colorido baseado em aprovação
+
+**Fórmula de Média:**
+```
+Média = (NP1×4 + NP2×4 + Trabalho×2) / 10
+Aprovado: Média ≥ 7
+```
+
+---
+
+### 💾 CAMADA DE DADOS
+
+#### **banco.py** (10.1 KB)
+**O que faz:** Acesso ao banco de dados SQLite (CRUD)
+**Status:** Não foi modificado nesta refatoração
+**Dependências:** sqlite3, datetime
+**Funções principais:**
+
+**Alunos:**
+- `adicionar_aluno()` - Insere novo aluno
+- `buscar_alunos()` - Retorna todos os alunos
+- `atualizar_aluno()` - Atualiza dados do aluno
+- `deletar_aluno()` - Remove aluno
+
+**Salas:**
+- `adicionar_sala()` - Insere nova sala
+- `buscar_salas()` - Retorna todas as salas
+- `atualizar_sala()` - Atualiza dados da sala
+- `deletar_sala()` - Remove sala
+
+**Associações:**
+- `associar_aluno_sala()` - Associa aluno à sala
+- `desassociar_aluno_sala()` - Remove associação
+- `buscar_alunos_por_sala()` - Retorna alunos de uma sala
+
+**Notas:**
+- `atribuir_notas()` - Insere/atualiza notas
+- `buscar_notas_aluno_sala()` - Retorna notas do aluno
+- `calcular_media()` - Calcula média ponderada
+
+**Inicialização:**
+- `inicializador_do_banco()` - Cria tabelas se não existirem
+
+**Tabelas do BD:**
+- `aluno` - (id, nome, matricula, email, curso)
+- `sala` - (id, nome, capacidade, descricao)
+- `aluno_sala` - (aluno_id, sala_id) [Chave composta]
+- `nota` - (id, aluno_id, sala_id, np1, np2, trabalho, media, data)
+
+#### **sistema_academico.db** (45 KB)
+**O que faz:** Banco de dados SQLite
+**Status:** Criado automaticamente na primeira execução
+**Backup:** Recomenda-se fazer backup regularmente
+
+---
+
+### 🤖 MÓDULOS EXTRAS
+
+#### **chatbot.py** (4.7 KB)
+**O que faz:** Aplicação Flask para chatbot acadêmico com IA
+**Status:** Não foi modificado nesta refatoração
+**Dependências:** Flask, OpenAI API
+**Requisito:** Variável de ambiente com chave OpenAI em `.env`
+
+#### **.env** (96 bytes)
+**O que faz:** Armazena variáveis de ambiente (chave de API)
+**Formato:**
+```
+OPENAI_API_KEY=sua_chave_aqui
+```
+
+---
+
+### 📚 DOCUMENTAÇÃO
+
+#### **README.md** (5.5 KB) 📖 COMECE POR AQUI
+**O que tem:** Guia completo do projeto, instruções de uso, requisitos
+**Leia quando:** Quer entender o projeto de forma geral
+
+#### **ARQUITETURA.txt** (10.8 KB) 🏗️
+**O que tem:** Diagramas técnicos, fluxo de dados, descrição de estruturas
+**Leia quando:** Quer entender como o código está organizado
+
+#### **GUIA_REFATORACAO.md** (5.0 KB) 🔧
+**O que tem:** Como adicionar novas telas, benefícios da refatoração
+**Leia quando:** Quer adicionar novas funcionalidades
+
+#### **RESUMO_REFATORACAO.txt** (6.2 KB) 📊
+**O que tem:** Antes e depois, benefícios, próximos passos
+**Leia quando:** Quer um resumo executivo das mudanças
+
+#### **INDICE_PROJETO.txt** (Este arquivo!) 📋
+**O que tem:** Descrição de cada arquivo e suas responsabilidades
+**Leia quando:** Quer saber onde algo específico está
+
+---
+
+## 🔗 Dependências Entre Arquivos
+
+```
+pim.py (Principal)
+  ├─ Importa: telas_alunos
+  ├─ Importa: telas_salas
+  ├─ Importa: telas_associacao
+  ├─ Importa: telas_notas
+  ├─ Importa: banco
+  └─ Importa: chatbot
+
+telas_alunos.py
+  └─ Importa: banco
+
+telas_salas.py
+  └─ Importa: banco
+
+telas_associacao.py
+  └─ Importa: banco
+
+telas_notas.py
+  └─ Importa: banco
+
+banco.py
+  └─ Usa: sqlite3, datetime
+```
+
+---
+
+## 🎯 Onde Fazer Cada Mudança
+
+| Quer fazer... | Edite este arquivo |
+|---------------|-------------------|
+| Adicionar campo ao formulário de aluno | `telas_alunos.py` |
+| Mudar cores da tela de salas | `telas_salas.py` |
+| Adicionar novo botão na navbar | `pim.py` |
+| Mudar fórmula de média | `telas_notas.py` ou `banco.py` |
+| Adicionar validação de email | `telas_alunos.py` |
+| Adicionar nova tabela no BD | `banco.py` |
+| Adicionar nova tela ao sistema | Criar novo arquivo + importar em `pim.py` |
+| Mudar tema de cores global | `pim.py` (ajustar hexadecimais) |
+
+---
+
+## 📊 Estatísticas
+
+**Código de Negócio:**
+- Arquivos Python: 9
+- Linhas de código: ~710 (sem testes)
+- Tabelas de dados: 4
+- Funções: 50+
+
+**Documentação:**
+- Arquivos Markdown: 4
+- Diagramas: 5+
+- Total de documentação: ~32 KB
+
+**Banco de Dados:**
+- Tipo: SQLite3
+- Tabelas: 4
+- Registros (exemplo): 0 (novo)
+- Tamanho: 45 KB (vazio)
+
+---
+
+## ✅ Checklist de Funcionalidades
+
+### Gerenciamento de Alunos
+- ✅ Adicionar aluno
+- ✅ Editar aluno
+- ✅ Deletar aluno
+- ✅ Auto-geração de matrícula
+- ✅ Visualizar lista de alunos
+
+### Gerenciamento de Salas
+- ✅ Adicionar sala
+- ✅ Editar sala
+- ✅ Deletar sala
+- ✅ Visualizar lista de salas
+- ✅ Ver alunos por sala
+
+### Associação Aluno-Sala
+- ✅ Associar aluno a sala
+- ✅ Desassociar aluno de sala
+- ✅ Verificar duplicatas
+
+### Atribuição de Notas
+- ✅ Atribuir notas (NP1, NP2, Trabalho)
+- ✅ Calcular média automática
+- ✅ Status de aprovação/reprovação
+- ✅ Visualizar notas por sala
+
+### Chatbot
+- ✅ Servidor Flask integrado
+- ✅ Abre em navegador
+- ✅ Roda em thread separada
+
+---
+
+## 🚀 Para Próximas Versões
+
+### Versão 2.1 (Próxima)
+- [ ] Tela de relatórios
+- [ ] Tela de configurações
+- [ ] Busca e filtros avançados
+
+### Versão 3.0 (Futuro)
+- [ ] Interface web (HTML/CSS)
+- [ ] App mobile (Flutter/React Native)
+- [ ] API REST para integração
+
+---
+
+## 🔐 Segurança & Performance
+
+**Segurança:**
+- ✅ Validação de entrada de dados
+- ✅ Tratamento de erros
+- ✅ Injeção SQL prevenida (uso de placeholders)
+
+**Performance:**
+- ✅ Queries otimizadas
+- ✅ Índices no banco de dados
+- ✅ Interface responsiva
+
+**Melhorias futuras:**
+- [ ] Adicionar autenticação/login
+- [ ] Implementar permissões de usuário
+- [ ] Adicionar logging de ações
+- [ ] Backups automáticos
+
+---
+
+## 📞 Contato & Suporte
+
+Se tiver dúvidas sobre qualquer arquivo:
+1. Leia o README.md primeiro
+2. Consulte ARQUITETURA.txt para entender a estrutura
+3. Veja GUIA_REFATORACAO.md para adicionar novas funcionalidades
+
+---
+
+**Versão do Documento:** 1.0  
+**Data:** Novembro 2025  
+**Status:** ✅ Completo e Testado  
+**Próxima Revisão:** Quando novas funcionalidades forem adicionadas

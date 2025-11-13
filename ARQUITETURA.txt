@@ -1,0 +1,197 @@
+"""
+ARQUITETURA DO SISTEMA ACADÊMICO
+=================================
+
+ESTRUTURA DE FLUXO:
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        pim.py (Principal)                       │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  Janela Principal (Tkinter)                               │   │
+│  │  ┌────────────────────────────────────────────────────┐  │   │
+│  │  │ Botões de Navegação:                               │  │   │
+│  │  │ • Gerenciar Alunos                                 │  │   │
+│  │  │ • Gerenciar Salas                                  │  │   │
+│  │  │ • Chatbot Acadêmico                                │  │   │
+│  │  └────────────────────────────────────────────────────┘  │   │
+│  │                                                            │   │
+│  │  ┌────────────────────────────────────────────────────┐  │   │
+│  │  │ Content Frame (Dinâmico)                           │  │   │
+│  │  │ Carrega as telas conforme usuário clica            │  │   │
+│  │  └────────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+
+IMPORTAÇÕES:
+    ↓
+    ├─ telas_alunos.py
+    ├─ telas_salas.py
+    ├─ telas_associacao.py
+    ├─ telas_notas.py
+    ├─ banco.py (Banco de Dados)
+    └─ chatbot.py (Flask Server)
+
+
+DETALHAMENTO DAS TELAS:
+========================
+
+1. TELA DE ALUNOS (telas_alunos.py)
+   ┌────────────────────────────────┐
+   │ Gerenciamento de Alunos        │
+   ├────────────────────────────────┤
+   │ Formulário:                    │
+   │ • Nome: ________________       │
+   │ • Email: _______________       │
+   │ • Curso: [Dropdown ▼]          │
+   │ • Matrícula: (Gerada auto)     │
+   │                                │
+   │ Botões:                        │
+   │ [Adicionar] [Limpar]           │
+   │ [Excluir] [Associar a Sala]    │
+   ├────────────────────────────────┤
+   │ Lista de Alunos (Treeview):    │
+   │ ID  Nome  Matrícula Email      │
+   │ 1   João  A123456    j@ex.com  │
+   │ 2   Maria M234567    m@ex.com  │
+   └────────────────────────────────┘
+
+
+2. TELA DE SALAS (telas_salas.py)
+   ┌────────────────────────────────────┐
+   │ Gerenciamento de Salas             │
+   ├────────────────────────────────────┤
+   │ Formulário:                        │
+   │ • Nome: ________________           │
+   │ • Capacidade: _____                │
+   │ • Descrição: _______________       │
+   │                                    │
+   │ Botões:                            │
+   │ [Adicionar] [Limpar]               │
+   │ [Excluir] [Atribuir Notas]         │
+   ├─────────────────────┬──────────────┤
+   │ Salas Cadastradas   │ Alunos Sala  │
+   │ ─────────────────── │ ─────────────│
+   │ Sala A              │ Nome  Média  │
+   │ Sala B              │ João  8.5 ✓  │
+   │ Sala C              │ Maria 6.0 ✗  │
+   │                     │              │
+   └─────────────────────┴──────────────┘
+
+
+3. TELA DE ASSOCIAÇÃO (telas_associacao.py)
+   ┌────────────────────────────────┐
+   │ Associar Aluno a Sala          │
+   ├────────────────────────────────┤
+   │ Aluno: [João (A123456) ▼]      │
+   │ Sala: [Sala A (Cap: 30) ▼]     │
+   │                                │
+   │ [Associar] [Desassociar]       │
+   └────────────────────────────────┘
+
+
+4. TELA DE NOTAS (telas_notas.py)
+   ┌────────────────────────────────┐
+   │ Atribuição de Notas            │
+   ├────────────────────────────────┤
+   │ Sala: [Sala A ▼]               │
+   │                                │
+   │ Alunos Matriculados:           │
+   │ Nome  NP1  NP2  Trb  Média     │
+   │ João  8.0  7.5  9.0  8.1 ✓    │
+   │ Maria 5.0  6.0  7.0  6.0 ✗    │
+   │                                │
+   │ NP1: [___]  NP2: [___]         │
+   │ Trabalho: [___]                │
+   │ [Atribuir Notas]               │
+   └────────────────────────────────┘
+
+
+FLUXO DE DADOS:
+===============
+
+┌─────────────────────────────────────────────────────────┐
+│ Usuário interage com Interface Tkinter (pim.py)         │
+└───────────────┬─────────────────────────────────────────┘
+                │
+                ├─→ Clica "Gerenciar Alunos"
+                │   └─→ Chama: telas_alunos.abrir_tela_alunos()
+                │
+                ├─→ Clica "Gerenciar Salas"
+                │   └─→ Chama: telas_salas.abrir_tela_salas()
+                │
+                ├─→ Clica "Associar a Sala"
+                │   └─→ Chama: telas_associacao.abrir_tela_associacao_aluno_sala()
+                │
+                ├─→ Clica "Atribuir Notas"
+                │   └─→ Chama: telas_notas.abrir_tela_atribuir_notas()
+                │
+                └─→ Clica "Chatbot Acadêmico"
+                    └─→ Chama: pim.abrir_chatbot()
+                        └─→ Inicia servidor Flask
+
+┌─────────────────────────────────────────────────────────┐
+│ Cada módulo de tela interage com banco.py              │
+│ (Operações CRUD: CREATE, READ, UPDATE, DELETE)         │
+└───────────────┬─────────────────────────────────────────┘
+                │
+                ├─→ banco.adicionar_aluno()
+                ├─→ banco.buscar_alunos()
+                ├─→ banco.atualizar_aluno()
+                ├─→ banco.deletar_aluno()
+                ├─→ banco.adicionar_sala()
+                ├─→ banco.buscar_salas()
+                ├─→ banco.atualizar_sala()
+                ├─→ banco.deletar_sala()
+                ├─→ banco.associar_aluno_sala()
+                ├─→ banco.desassociar_aluno_sala()
+                ├─→ banco.atribuir_notas()
+                ├─→ banco.buscar_notas_aluno_sala()
+                └─→ banco.calcular_media()
+
+┌─────────────────────────────────────────────────────────┐
+│ Banco de Dados SQLite (sistema_academico.db)            │
+│                                                          │
+│ Tabelas:                                                │
+│ • aluno (id, nome, matricula, email, curso)            │
+│ • sala (id, nome, capacidade, descricao)               │
+│ • aluno_sala (aluno_id, sala_id)                       │
+│ • nota (id, aluno_id, sala_id, np1, np2, trabalho)    │
+└─────────────────────────────────────────────────────────┘
+
+
+VARIÁVEIS GLOBAIS POR MÓDULO:
+=============================
+
+telas_alunos.py:
+├─ aluno_id_selecionado (StringVar)
+├─ entry_nome_aluno (Entry widget)
+├─ entry_email_aluno (Entry widget)
+├─ curso_var (StringVar)
+├─ selected_curso (Combobox widget)
+├─ label_matricula_aluno (Label widget)
+└─ tree_alunos (Treeview widget)
+
+telas_salas.py:
+├─ sala_id_selecionada (StringVar)
+├─ entry_nome_sala (Entry widget)
+├─ entry_capacidade_sala (Entry widget)
+├─ entry_descricao_sala (Entry widget)
+├─ tree_salas (Treeview widget)
+└─ tree_alunos_sala (Treeview widget)
+
+telas_associacao.py:
+├─ aluno_selecionado_var (StringVar)
+└─ sala_selecionada_var (StringVar)
+
+telas_notas.py:
+├─ sala_nota_selecionada_var (StringVar)
+├─ entry_np1 (Entry widget)
+├─ entry_np2 (Entry widget)
+├─ entry_trabalho (Entry widget)
+└─ tree_notas (Treeview widget)
+
+pim.py:
+├─ flask_thread (Thread)
+├─ content_frame (Frame widget)
+└─ root (Tk window)
+"""
